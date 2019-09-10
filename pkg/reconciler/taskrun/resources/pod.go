@@ -260,7 +260,7 @@ func MakePod(taskRun *v1alpha1.TaskRun, taskSpec v1alpha1.TaskSpec, kubeclient k
 
 	initSteps = append(initSteps, initOutputResourcesDefaultDir(taskRun, taskSpec)...)
 
-	maxIndicesByResource := findMaxResourceRequest(taskSpec.Steps, corev1.ResourceCPU, corev1.ResourceMemory, corev1.ResourceEphemeralStorage)
+	maxIndicesByResource := findMaxResourceRequest(taskSpec.Steps, corev1.ResourceCPU, corev1.ResourceMemory)
 
 	for i, s := range taskSpec.Steps {
 		s.Env = append(implicitEnvVars, s.Env...)

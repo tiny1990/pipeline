@@ -504,9 +504,10 @@ func createRedirectedTaskSpec(kubeclient kubernetes.Interface, ts *v1alpha1.Task
 			DownwardAPI: &corev1.DownwardAPIVolumeSource{
 				Items: []corev1.DownwardAPIVolumeFile{
 					{
-						Path: entrypoint.DownwardMountReadyFile,
+						Path: entrypoint.DownwardAnnotationFile,
 						FieldRef: &corev1.ObjectFieldSelector{
-							FieldPath: fmt.Sprintf("metadata.annotations['%s']", resources.ReadyAnnotation),
+							FieldPath: "metadata.annotations",
+							//FieldPath: fmt.Sprintf("metadata.annotations['%s']", resources.ReadyAnnotation),
 						},
 					},
 				},

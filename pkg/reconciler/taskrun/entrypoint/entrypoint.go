@@ -42,6 +42,7 @@ const (
 	DownwardMountName      = "downward"
 	DownwardMountPoint     = "/builder/downward"
 	DownwardMountReadyFile = "ready"
+	DownwardAnnotationFile  = "annotation"
 	BinaryLocation         = MountPoint + "/entrypoint"
 	JSONConfigEnvVar       = "ENTRYPOINT_OPTIONS"
 	InitContainerName      = "place-tools"
@@ -177,7 +178,7 @@ func GetArgs(stepNum int, commands, args []string) []string {
 
 func getWaitFile(stepNum int) string {
 	if stepNum == 0 {
-		return fmt.Sprintf("%s/%s", DownwardMountPoint, DownwardMountReadyFile)
+		return fmt.Sprintf("%s/%s", DownwardMountPoint, DownwardAnnotationFile)
 	}
 
 	return fmt.Sprintf("%s/%s", MountPoint, strconv.Itoa(stepNum-1))
