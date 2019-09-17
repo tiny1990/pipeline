@@ -122,8 +122,7 @@ var (
 			"--my-arg=$(inputs.params.myarg)",
 			"--my-arg-with-default=$(inputs.params.myarghasdefault)",
 			"--my-arg-with-default2=$(inputs.params.myarghasdefault2)",
-			// TODO(#1170): Remove support for ${} syntax
-			"--my-additional-arg=${outputs.resources.myimage.url}",
+			"--my-additional-arg=$(outputs.resources.myimage.url)",
 		)),
 		tb.Step("myothercontainer", "myotherimage", tb.StepCommand("/mycmd"), tb.StepArgs(
 			"--my-other-arg=$(inputs.resources.workspace.url)",
@@ -600,7 +599,7 @@ func TestReconcile(t *testing.T) {
 				tb.PodRestartPolicy(corev1.RestartPolicyNever),
 				getCredentialsInitContainer("l22wn"),
 				getPlaceToolsInitContainer(),
-				getMkdirResourceContainer("git-resource", "/workspace/git-resource", "vr6ds"),
+				getMkdirResourceContainer("git-resource", "/workspace/output/git-resource", "vr6ds"),
 				tb.PodContainer("step-create-dir-another-git-resource-78c5n", "override-with-bash-noop:latest",
 					tb.Command(entrypointLocation),
 					tb.Args("-wait_file", "/builder/tools/0", "-post_file", "/builder/tools/1", "-entrypoint", "/ko-app/bash", "--",
@@ -696,7 +695,7 @@ func TestReconcile(t *testing.T) {
 				tb.PodContainer("step-source-copy-git-resource-j2tds", "override-with-bash-noop:latest",
 					tb.Command(entrypointLocation),
 					tb.Args("-wait_file", "/builder/tools/6", "-post_file", "/builder/tools/7", "-entrypoint", "/ko-app/bash", "--",
-						"-args", "cp -r /workspace/git-resource/. output-folder"),
+						"-args", "cp -r /workspace/output/git-resource/. output-folder"),
 					tb.WorkingDir(workspaceDir),
 					tb.EnvVar("HOME", "/builder/home"),
 					tb.VolumeMount("test-pvc", "/pvc"),

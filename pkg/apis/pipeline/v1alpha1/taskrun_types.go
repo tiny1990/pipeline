@@ -59,19 +59,6 @@ type TaskRunSpec struct {
 
 	// PodTemplate holds pod specific configuration
 	PodTemplate PodTemplate `json:"podTemplate,omitempty"`
-
-	// FIXME(vdemeester) Deprecated
-	// NodeSelector is a selector which must be true for the pod to fit on a node.
-	// Selector which must match a node's labels for the pod to be scheduled on that node.
-	// More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
-	// +optional
-	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
-	// If specified, the pod's tolerations.
-	// +optional
-	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
-	// If specified, the pod's scheduling constraints
-	// +optional
-	Affinity *corev1.Affinity `json:"affinity,omitempty"`
 }
 
 // TaskRunSpecStatus defines the taskrun spec status the user can provide
@@ -304,5 +291,6 @@ func (tr *TaskRun) IsCancelled() bool {
 
 // GetRunKey return the taskrun key for timeout handler map
 func (tr *TaskRun) GetRunKey() string {
-	return fmt.Sprintf("%s/%s/%s", "TaskRun", tr.Namespace, tr.Name)
+	// The address of the pointer is a threadsafe unique identifier for the taskrun
+	return fmt.Sprintf("%s/%p", "TaskRun", tr)
 }
