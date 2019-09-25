@@ -19,9 +19,13 @@ package taskrun
 import (
 	"context"
 	"fmt"
+	"github.com/google/uuid"
+	"log"
 	"reflect"
 	"strings"
 	"time"
+
+	"go.etcd.io/etcd/clientv3"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/tektoncd/pipeline/pkg/apis/config"
@@ -61,6 +65,9 @@ const (
 // Reconciler implements controller.Reconciler for Configuration resources.
 type Reconciler struct {
 	*reconciler.Base
+
+	// etcd
+	etcdCfg clientv3.Config
 
 	// listers index properties about resources
 	taskRunLister     listers.TaskRunLister
@@ -317,7 +324,11 @@ func (c *Reconciler) reconcile(ctx context.Context, tr *v1alpha1.TaskRun) error 
 	after := tr.Status.GetCondition(apis.ConditionSucceeded)
 
 	if addReady {
-		if err := c.updateReady(pod); err != nil {
+		// if ready
+		// set etcd key
+		//
+		key := pod.Annotations["TK-UUID"]
+		if err := c.updateReadyEtcd(key); err != nil {
 			return err
 		}
 	}
@@ -396,6 +407,25 @@ func (c *Reconciler) updateLabelsAndAnnotations(tr *v1alpha1.TaskRun) (*v1alpha1
 	return newTr, nil
 }
 
+func (c *Reconciler) updateReadyEtcd(key string) error {
+
+	cli, err := clientv3.New(c.etcdCfg)
+	if err != nil {
+		return err
+	}
+
+	resp, err := cli.Put(context.Background(), "/tekton/"+key, "READY")
+
+	if err != nil {
+		return err
+	} else {
+		// print common key info
+		log.Printf("Set is done. Metadata is %q\n", resp)
+	}
+
+	return nil
+}
+
 // updateReady updates a Pod to include the "ready" annotation, which will be projected by
 // the Downward API into a volume mounted by the entrypoint container. This will signal to
 // the entrypoint that the TaskRun can proceed.
@@ -416,6 +446,18 @@ func (c *Reconciler) updateReady(pod *corev1.Pod) error {
 // createPod creates a Pod based on the Task's configuration, with pvcName as a volumeMount
 // TODO(dibyom): Refactor resource setup/substitution logic to its own function in the resources package
 func (c *Reconciler) createPod(tr *v1alpha1.TaskRun, rtr *resources.ResolvedTaskResources) (*corev1.Pod, error) {
+
+	// todo	hardcode here
+	// add  TK-UUID
+
+	id, err := uuid.NewUUID()
+
+	if err != nil {
+		return nil, err
+	}
+
+	tr.Annotations["TK-UUID"] = id.String()
+
 	ts := rtr.TaskSpec.DeepCopy()
 	inputResources, err := resourceImplBinding(rtr.Inputs)
 	if err != nil {

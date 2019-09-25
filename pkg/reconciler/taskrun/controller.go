@@ -20,6 +20,8 @@ import (
 	"context"
 	"time"
 
+	"go.etcd.io/etcd/clientv3"
+
 	pipelineclient "github.com/tektoncd/pipeline/pkg/client/injection/client"
 	clustertaskinformer "github.com/tektoncd/pipeline/pkg/client/injection/informers/pipeline/v1alpha1/clustertask"
 	resourceinformer "github.com/tektoncd/pipeline/pkg/client/injection/informers/pipeline/v1alpha1/pipelineresource"
@@ -63,8 +65,15 @@ func NewController(
 		Logger:            logger,
 	}
 
+	ectdCfg := clientv3.Config{
+		Endpoints: []string{"http://172.22.213.59:2379"},
+		// set timeout per request to fail fast when the target endpoint is unavailable
+		DialTimeout: time.Second,
+	}
+
 	c := &Reconciler{
 		Base:              reconciler.NewBase(opt, taskRunAgentName),
+		etcdCfg:           ectdCfg,
 		taskRunLister:     taskRunInformer.Lister(),
 		taskLister:        taskInformer.Lister(),
 		clusterTaskLister: clusterTaskInformer.Lister(),
