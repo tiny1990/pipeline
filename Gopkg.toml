@@ -151,3 +151,7 @@ required = [
   name = "knative.dev/pkg"
   unused-packages = false
   non-go = false
+
+[[constraint]]
+  name = "go.etcd.io/etcd"
+  version = "=3.4.1"
